@@ -49,7 +49,7 @@ html, body {
 
 .input-box {
   width: 100%;
-  height: 150px;
+  height: 384px;
   background-color: #fff;
   border-radius: 12px;
   padding: 12px;
@@ -75,7 +75,7 @@ html, body {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overflow-x: hidden;
-  padding: 16px;
+  padding: 0px 16px;
   background-color: #f5f5f5;
 }
 
