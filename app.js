@@ -30,6 +30,8 @@
   var scrollLocked = false
   var lockedScrollTop = 0
   var pendingWordbookAdd = null
+  var inputSelectedForCopy = false
+  var appendedInputSpan = null  // 右键时临时追加到卡片末尾的隐藏 span
 
   // 音频
   var audioCtx = null
@@ -207,18 +209,11 @@
     })
   }
 
-  // ===== 多选区复制：合并卡片与输入框文本 =====
-  document.addEventListener('copy', function (e) {
-    var selection = window.getSelection()
-    if (selection.rangeCount < 2) return
-    var combined = ''
-    for (var i = 0; i < selection.rangeCount; i++) {
-      var text = selection.getRangeAt(i).toString()
-      if (combined && text) combined += '\n'
-      combined += text
-    }
-    e.clipboardData.setData('text/plain', combined)
-    e.preventDefault()
+  // ===== 点击其他区域清除追加的 span 与状态 =====
+  document.addEventListener('pointerdown', function (e) {
+    // 在 contextmenu 之前触发（右键卡片时先清后加），避免残留
+    clearAppendedSpan()
+    inputSelectedForCopy = false
   })
 
   // ===== 指针事件 =====
@@ -306,29 +301,56 @@
     }
   }
 
+  // ===== 清理上次追加的隐藏 span =====
+  function clearAppendedSpan() {
+    if (appendedInputSpan && appendedInputSpan.parentNode) {
+      appendedInputSpan.parentNode.removeChild(appendedInputSpan)
+    }
+    appendedInputSpan = null
+  }
+
   // ===== 右键反选全部内容（卡片 + 输入框） =====
+  // 方案：把输入框文本以隐藏 span 的形式追加到卡片末尾，
+  //       然后选中整个卡片（单个 range），这样 getSelection().toString()
+  //       返回「卡片文本 + 换行 + 输入框文本」，豆包插件可检测到。
   function onContextMenu(e) {
     e.preventDefault()
     var card = e.currentTarget
-    // 临时启用文本选择（覆盖 user-select: none）
     card.style.userSelect = 'text'
     card.style.webkitUserSelect = 'text'
 
+    // 先清理上次追加的 span
+    clearAppendedSpan()
+
+    var inputBox = document.getElementById('input-box')
+    var hasInput = inputBox && inputBox.textContent.trim()
+
+    if (hasInput) {
+      // 追加隐藏 span，内容是换行 + 输入框文本
+      var span = document.createElement('span')
+      span.textContent = '\n' + inputBox.textContent
+      span.style.position = 'absolute'
+      span.style.left = '-9999px'
+      span.style.top = '0'
+      span.style.width = '1px'
+      span.style.height = '1px'
+      span.style.overflow = 'hidden'
+      span.style.opacity = '0'
+      span.style.pointerEvents = 'none'
+      span.setAttribute('data-role', 'appended-input')
+      card.appendChild(span)
+      appendedInputSpan = span
+      inputSelectedForCopy = true
+    } else {
+      inputSelectedForCopy = false
+    }
+
+    // 选中整个卡片内容（单个 range，包含隐藏的输入框文本）
     var selection = window.getSelection()
     selection.removeAllRanges()
-
-    // 选中卡片内容
-    var cardRange = document.createRange()
-    cardRange.selectNodeContents(card)
-    selection.addRange(cardRange)
-
-    // 同时选中输入框内容（若非空）
-    var inputBox = document.getElementById('input-box')
-    if (inputBox && inputBox.textContent.trim()) {
-      var inputRange = document.createRange()
-      inputRange.selectNodeContents(inputBox)
-      selection.addRange(inputRange)
-    }
+    var range = document.createRange()
+    range.selectNodeContents(card)
+    selection.addRange(range)
   }
 
   // ===== 滚动锁定 =====
