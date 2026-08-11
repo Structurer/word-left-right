@@ -4,7 +4,7 @@
   var PAGE_SIZE = 50
   var SWIPE_THRESHOLD = 100
   var CARD_GAP_PX = 16
-  var SWIPE_ANIM_MS = 360
+  var SWIPE_ANIM_MS = 500
   var FILL_UP_ANIM_MS = 320
 
   var mainContainer = document.getElementById('container')
@@ -269,6 +269,17 @@
         return
       }
       selectCard(prevIndex)
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault()
+      // 触发选中的卡片右滑
+      if (selectedIndex >= 0 && selectedIndex < wordList.length) {
+        var cards = mainContainer.querySelectorAll('.word-card')
+        var card = cards[selectedIndex]
+        if (card) {
+          // 模拟右滑（方向为 1 表示右滑）
+          swipeCardAway(selectedIndex, 1, card)
+        }
+      }
     }
   })
 
@@ -415,10 +426,11 @@
     // 生词本列不支持滑动
     if (info.column === 'wordbook') return
 
-    // 水平滑动
+    // 水平滑动 - 只允许右滑，禁用左滑
     var deltaX = info.currentX - info.startX
-    if (Math.abs(deltaX) >= SWIPE_THRESHOLD) {
-      swipeCardAway(index, deltaX > 0 ? 1 : -1, card)
+    if (deltaX >= SWIPE_THRESHOLD) {
+      // 只有右滑才触发
+      swipeCardAway(index, 1, card)
     } else {
       resetCardPosition(index, card)
     }
@@ -500,6 +512,13 @@
 
   // ===== 卡片滑出 =====
   function swipeCardAway(index, direction, card) {
+    // 只允许右滑（direction === 1），禁用左滑
+    if (direction !== 1) {
+      // 左滑直接重置卡片位置，不做任何操作
+      resetCardPosition(index, card)
+      return
+    }
+
     var screenWidth = window.innerWidth
     var targetX = direction * (screenWidth + 200)
 
