@@ -197,6 +197,30 @@
     }
   })
 
+  // ===== 输入框：仅粘贴纯文本 =====
+  var inputBox = document.getElementById('input-box')
+  if (inputBox) {
+    inputBox.addEventListener('paste', function (e) {
+      e.preventDefault()
+      var text = (e.clipboardData || window.clipboardData).getData('text/plain')
+      document.execCommand('insertText', false, text)
+    })
+  }
+
+  // ===== 多选区复制：合并卡片与输入框文本 =====
+  document.addEventListener('copy', function (e) {
+    var selection = window.getSelection()
+    if (selection.rangeCount < 2) return
+    var combined = ''
+    for (var i = 0; i < selection.rangeCount; i++) {
+      var text = selection.getRangeAt(i).toString()
+      if (combined && text) combined += '\n'
+      combined += text
+    }
+    e.clipboardData.setData('text/plain', combined)
+    e.preventDefault()
+  })
+
   // ===== 指针事件 =====
   function onPointerDown(e) {
     if (pendingRemoveIndex >= 0) return
@@ -282,18 +306,29 @@
     }
   }
 
-  // ===== 右键反选全部内容 =====
+  // ===== 右键反选全部内容（卡片 + 输入框） =====
   function onContextMenu(e) {
     e.preventDefault()
     var card = e.currentTarget
     // 临时启用文本选择（覆盖 user-select: none）
     card.style.userSelect = 'text'
     card.style.webkitUserSelect = 'text'
-    var range = document.createRange()
-    range.selectNodeContents(card)
+
     var selection = window.getSelection()
     selection.removeAllRanges()
-    selection.addRange(range)
+
+    // 选中卡片内容
+    var cardRange = document.createRange()
+    cardRange.selectNodeContents(card)
+    selection.addRange(cardRange)
+
+    // 同时选中输入框内容（若非空）
+    var inputBox = document.getElementById('input-box')
+    if (inputBox && inputBox.textContent.trim()) {
+      var inputRange = document.createRange()
+      inputRange.selectNodeContents(inputBox)
+      selection.addRange(inputRange)
+    }
   }
 
   // ===== 滚动锁定 =====
