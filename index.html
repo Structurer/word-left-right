@@ -8,11 +8,18 @@
 </head>
 <body>
   <div class="layout">
-    <div class="column">
+    <!-- 左侧列：上下分栏（输入区域 + 卡片列表） -->
+    <div class="column column-left">
+      <!-- 上部：固定高度输入区域 -->
+      <div class="input-area">
+        <input type="text" class="word-input" id="word-input" placeholder="输入单词，按空格判断，按Enter跳过" autofocus>
+      </div>
+      <!-- 下部：卡片列表 -->
       <div class="container" id="container">
         <div class="loading-tip" id="initial-loading">加载中...</div>
       </div>
     </div>
+    <!-- 右侧列 -->
     <div class="column column-right">
       <div class="wordbook-wrap">
         <div class="container" id="wordbook">

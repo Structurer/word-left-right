@@ -4,13 +4,14 @@
   var PAGE_SIZE = 50
   var SWIPE_THRESHOLD = 100
   var CARD_GAP_PX = 16
-  var SWIPE_ANIM_MS = 500
+  var SWIPE_ANIM_MS = 360
   var FILL_UP_ANIM_MS = 320
 
   var mainContainer = document.getElementById('container')
   var wordbookContainer = document.getElementById('wordbook')
   var initialLoading = document.getElementById('initial-loading')
   var wordbookEmpty = document.getElementById('wordbook-empty')
+  var wordInput = document.getElementById('word-input')
 
   // 左列状态
   var allWords = []
@@ -79,6 +80,9 @@
         if (wordList.length > 0) {
           selectCard(0)
         }
+
+        // 输入框获得焦点
+        wordInput.focus()
       })
       .catch(function (err) {
         initialLoading.textContent = '数据加载失败: ' + err.message
@@ -178,6 +182,7 @@
       var idx = parseInt(this.dataset.index)
       if (this.dataset.column === 'main') {
         selectCard(idx)
+        wordInput.focus()
       }
     })
 
@@ -237,11 +242,100 @@
     })
   }
 
+  // ===== 单词输入框事件 =====
+  function setupWordInput() {
+    if (!wordInput) return
+
+    wordInput.addEventListener('keydown', function(e) {
+      if (e.key === ' ') {
+        // 空格键：判断输入是否正确
+        e.preventDefault()
+        checkWordInput()
+      } else if (e.key === 'Enter') {
+        // Enter键：不判断，直接切换到下一个单词
+        e.preventDefault()
+        skipToNextWord()
+      }
+    })
+  }
+
+  // ===== 检查单词输入 =====
+  function checkWordInput() {
+    if (selectedIndex < 0 || selectedIndex >= wordList.length) {
+      return
+    }
+
+    var inputValue = wordInput.value.trim()
+    var currentWord = wordList[selectedIndex].word
+
+    if (inputValue === '') {
+      // 空输入不处理
+      return
+    }
+
+    if (inputValue === currentWord) {
+      // 输入正确：清空输入框，切换到下一个单词
+      wordInput.value = ''
+      wordInput.classList.remove('error')
+      moveToNextWord()
+    } else {
+      // 输入错误：反选当前输入框内容（全选）
+      wordInput.select()
+      wordInput.classList.add('error')
+      // 抖动动画由 CSS 处理
+      // 震动后自动清除错误状态
+      setTimeout(function() {
+        wordInput.classList.remove('error')
+      }, 400)
+    }
+  }
+
+  // ===== 跳过到下一个单词（Enter键） =====
+  function skipToNextWord() {
+    if (selectedIndex < 0 || selectedIndex >= wordList.length) {
+      return
+    }
+    // 清空输入框，清除错误状态，切换到下一个单词
+    wordInput.value = ''
+    wordInput.classList.remove('error')
+    moveToNextWord()
+  }
+
+  // ===== 移动到下一个单词 =====
+  function moveToNextWord() {
+    if (wordList.length === 0) return
+
+    var nextIndex = selectedIndex + 1
+    if (nextIndex >= wordList.length) {
+      // 尝试加载更多
+      loadMore()
+      // 如果加载后还不够，就停留在最后一张
+      if (selectedIndex < wordList.length - 1) {
+        nextIndex = selectedIndex + 1
+      } else {
+        // 已经是最后一张，停留在当前
+        wordInput.focus()
+        return
+      }
+    }
+    selectCard(nextIndex)
+    wordInput.focus()
+  }
+
   // ===== 键盘事件 =====
   document.addEventListener('keydown', function(e) {
-    // 如果输入框获得焦点，不处理方向键
+    // 如果输入框获得焦点，不处理方向键（让输入框自己处理）
     var activeEl = document.activeElement
     if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.getAttribute('contenteditable') === 'true')) {
+      // 单词输入框只处理空格和Enter，其他键让输入框处理
+      if (e.key === ' ' || e.key === 'Enter') {
+        // 这些键已经在 wordInput 的 keydown 事件中处理了
+        return
+      }
+      // 方向键在输入框中不触发卡片切换
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        return
+      }
       return
     }
 
@@ -250,9 +344,7 @@
       if (wordList.length === 0) return
       var nextIndex = selectedIndex + 1
       if (nextIndex >= wordList.length) {
-        // 如果已经到最后一张，尝试加载更多
         loadMore()
-        // 如果加载后还没有更多，就停留在最后一张
         if (selectedIndex < wordList.length - 1) {
           nextIndex = selectedIndex + 1
         } else {
@@ -260,26 +352,26 @@
         }
       }
       selectCard(nextIndex)
+      wordInput.focus()
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
       if (wordList.length === 0) return
       var prevIndex = selectedIndex - 1
       if (prevIndex < 0) {
-        // 如果已经是第一张，就留在第一张
         return
       }
       selectCard(prevIndex)
+      wordInput.focus()
     } else if (e.key === 'ArrowRight') {
       e.preventDefault()
-      // 触发选中的卡片右滑
       if (selectedIndex >= 0 && selectedIndex < wordList.length) {
         var cards = mainContainer.querySelectorAll('.word-card')
         var card = cards[selectedIndex]
         if (card) {
-          // 模拟右滑（方向为 1 表示右滑）
           swipeCardAway(selectedIndex, 1, card)
         }
       }
+      wordInput.focus()
     }
   })
 
@@ -514,7 +606,6 @@
   function swipeCardAway(index, direction, card) {
     // 只允许右滑（direction === 1），禁用左滑
     if (direction !== 1) {
-      // 左滑直接重置卡片位置，不做任何操作
       resetCardPosition(index, card)
       return
     }
@@ -617,6 +708,9 @@
     } else {
       clearSelected()
     }
+
+    // 输入框获得焦点
+    wordInput.focus()
   }
 
   // ===== 添加到生词本（从底部插入） =====
@@ -673,6 +767,9 @@
     audioCtx.src = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(word) + '&type=2'
     audioCtx.play().catch(function () {})
   }
+
+  // ===== 设置输入框事件 =====
+  setupWordInput()
 
   // ===== 启动 =====
   if (document.readyState === 'loading') {
