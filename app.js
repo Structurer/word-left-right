@@ -199,13 +199,29 @@
     }
   })
 
-  // ===== 输入框：仅粘贴纯文本 =====
+  // ===== 输入框：仅粘贴纯文本 + 本地缓存 =====
   var inputBox = document.getElementById('input-box')
+  var INPUT_STORAGE_KEY = 'word-input-box-content'
   if (inputBox) {
+    // 恢复上次内容
+    try {
+      var saved = localStorage.getItem(INPUT_STORAGE_KEY)
+      if (saved) inputBox.textContent = saved
+    } catch (err) {}
+
     inputBox.addEventListener('paste', function (e) {
       e.preventDefault()
       var text = (e.clipboardData || window.clipboardData).getData('text/plain')
       document.execCommand('insertText', false, text)
+    })
+
+    // 输入时自动保存（防抖）
+    var saveTimer = null
+    inputBox.addEventListener('input', function () {
+      if (saveTimer) clearTimeout(saveTimer)
+      saveTimer = setTimeout(function () {
+        try { localStorage.setItem(INPUT_STORAGE_KEY, inputBox.textContent) } catch (err) {}
+      }, 300)
     })
   }
 
@@ -470,7 +486,7 @@
     }
   }
 
-  // ===== 添加到生词本 =====
+  // ===== 添加到生词本（从底部插入） =====
   function addToWordbook(word) {
     var wordCopy = {
       word: word.word,
@@ -483,22 +499,31 @@
       uid: uidCounter++
     }
 
-    wordbookList.unshift(wordCopy)
+    wordbookList.push(wordCopy)
 
     // 移除空提示
     if (wordbookEmpty) {
       wordbookEmpty.style.display = 'none'
     }
 
-    // 创建卡片并插入到顶部
-    var cardEl = createCardElement(wordCopy, 0, 'wordbook')
-    wordbookContainer.insertBefore(cardEl, wordbookContainer.firstChild)
+    // 计算插入位置（跳过末尾的 .loading-tip）
+    var insertBefore = null
+    var children = wordbookContainer.children
+    for (var i = 0; i < children.length; i++) {
+      if (children[i].classList.contains('loading-tip')) {
+        insertBefore = children[i]
+        break
+      }
+    }
 
-    // 更新所有卡片的 index
-    var cards = wordbookContainer.querySelectorAll('.word-card')
-    cards.forEach(function (c, i) {
-      c.dataset.index = i
-    })
+    // 创建卡片并插入到底部（在 loading-tip 之前，若存在）
+    var newIndex = wordbookList.length - 1
+    var cardEl = createCardElement(wordCopy, newIndex, 'wordbook')
+    if (insertBefore) {
+      wordbookContainer.insertBefore(cardEl, insertBefore)
+    } else {
+      wordbookContainer.appendChild(cardEl)
+    }
 
     // 动画结束后移除入场类
     setTimeout(function () {
