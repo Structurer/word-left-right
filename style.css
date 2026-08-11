@@ -39,6 +39,16 @@ html, body {
   overflow: hidden;
 }
 
+/* 左列：滚动条置于左侧，且始终可见（含互动期间） */
+#container {
+  direction: rtl;
+  overflow-y: scroll;
+}
+
+#container > * {
+  direction: ltr;
+}
+
 .word-card {
   position: relative;
   background-color: #fff;
@@ -51,10 +61,6 @@ html, body {
   user-select: none;
   -webkit-user-select: none;
   touch-action: pan-y;
-}
-
-.word-card:active {
-  background-color: #f9f9f9;
 }
 
 .word-card.card-transition {

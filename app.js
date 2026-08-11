@@ -28,6 +28,7 @@
   var pendingRemoveIndex = -1
   var cardHeight = null
   var scrollLocked = false
+  var lockedScrollTop = 0
   var pendingWordbookAdd = null
 
   // 音频
@@ -187,7 +188,10 @@
 
   // ===== 滚动检测 =====
   mainContainer.addEventListener('scroll', function () {
-    if (scrollLocked) return
+    if (scrollLocked) {
+      mainContainer.scrollTop = lockedScrollTop
+      return
+    }
     if (mainContainer.scrollTop + mainContainer.clientHeight >= mainContainer.scrollHeight - 400) {
       loadMore()
     }
@@ -295,6 +299,7 @@
   // ===== 滚动锁定 =====
   function lockScroll() {
     scrollLocked = true
+    lockedScrollTop = mainContainer.scrollTop
     mainContainer.classList.add('no-scroll')
   }
 
