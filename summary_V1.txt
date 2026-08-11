@@ -1,3 +1,10 @@
+以下是我的项目代码，后续我会告诉你我要做哪些修改，请你根据我的修改意见把完成修改并返回我对应的那个文件的完整内容。
+
+============================================================
+
+============================================================
+【文件路径】C:/Users/TMPlo/Desktop/code-repo/word-left-right/app.js
+============================================================
 (function () {
   'use strict'
 
@@ -32,9 +39,6 @@
   var pendingWordbookAdd = null
   var inputSelectedForCopy = false
   var appendedInputSpan = null  // 右键时临时追加到卡片末尾的隐藏 span
-
-  // 选中状态
-  var selectedIndex = -1  // -1 表示无选中
 
   // 音频
   var audioCtx = null
@@ -74,11 +78,6 @@
 
         renderAll()
         initialLoading.style.display = 'none'
-
-        // 默认选中第一张卡片
-        if (wordList.length > 0) {
-          selectCard(0)
-        }
       })
       .catch(function (err) {
         initialLoading.textContent = '数据加载失败: ' + err.message
@@ -115,9 +114,6 @@
   function createCardElement(item, index, column) {
     var card = document.createElement('div')
     card.className = 'word-card' + (item.animClass ? ' ' + item.animClass : '')
-    if (column === 'main' && index === selectedIndex) {
-      card.classList.add('selected')
-    }
     card.dataset.index = index
     card.dataset.column = column
     card.style.transform = 'translateX(' + (item.offsetX || 0) + 'px) translateY(' + (item.offsetY || 0) + 'px)'
@@ -172,105 +168,8 @@
     // 右键选中全部内容
     card.addEventListener('contextmenu', onContextMenu)
 
-    // 点击卡片选中
-    card.addEventListener('click', function(e) {
-      if (e.button === 2) return // 右键不处理
-      var idx = parseInt(this.dataset.index)
-      if (this.dataset.column === 'main') {
-        selectCard(idx)
-      }
-    })
-
     return card
   }
-
-  // ===== 选中卡片 =====
-  function selectCard(index) {
-    if (index < 0 || index >= wordList.length) return
-
-    // 清除旧选中
-    clearSelected()
-
-    selectedIndex = index
-
-    // 给卡片添加选中类
-    var cards = mainContainer.querySelectorAll('.word-card')
-    if (cards[index]) {
-      cards[index].classList.add('selected')
-    }
-
-    // 滚动到目标位置：卡片顶部距离窗口底部 200px
-    scrollToSelectedCard(index)
-  }
-
-  function clearSelected() {
-    var cards = mainContainer.querySelectorAll('.word-card')
-    cards.forEach(function(card) {
-      card.classList.remove('selected')
-    })
-    selectedIndex = -1
-  }
-
-  function scrollToSelectedCard(index) {
-    var cards = mainContainer.querySelectorAll('.word-card')
-    if (!cards[index]) return
-
-    var card = cards[index]
-    var containerRect = mainContainer.getBoundingClientRect()
-    var cardRect = card.getBoundingClientRect()
-
-    // 卡片顶部相对于容器顶部的偏移
-    var cardTopRelative = cardRect.top - containerRect.top + mainContainer.scrollTop
-
-    // 目标位置：窗口底部往上 200px
-    var targetBottom = mainContainer.clientHeight - 200
-    // 卡片顶部应该对齐到的位置
-    var targetScrollTop = cardTopRelative - targetBottom
-
-    // 确保不超出边界
-    targetScrollTop = Math.max(0, targetScrollTop)
-    targetScrollTop = Math.min(targetScrollTop, mainContainer.scrollHeight - mainContainer.clientHeight)
-
-    mainContainer.scrollTo({
-      top: targetScrollTop,
-      behavior: 'smooth'
-    })
-  }
-
-  // ===== 键盘事件 =====
-  document.addEventListener('keydown', function(e) {
-    // 如果输入框获得焦点，不处理方向键
-    var activeEl = document.activeElement
-    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.getAttribute('contenteditable') === 'true')) {
-      return
-    }
-
-    if (e.key === 'ArrowDown') {
-      e.preventDefault()
-      if (wordList.length === 0) return
-      var nextIndex = selectedIndex + 1
-      if (nextIndex >= wordList.length) {
-        // 如果已经到最后一张，尝试加载更多
-        loadMore()
-        // 如果加载后还没有更多，就停留在最后一张
-        if (selectedIndex < wordList.length - 1) {
-          nextIndex = selectedIndex + 1
-        } else {
-          return
-        }
-      }
-      selectCard(nextIndex)
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault()
-      if (wordList.length === 0) return
-      var prevIndex = selectedIndex - 1
-      if (prevIndex < 0) {
-        // 如果已经是第一张，就留在第一张
-        return
-      }
-      selectCard(prevIndex)
-    }
-  })
 
   // ===== 分页加载 =====
   function loadMore() {
@@ -335,6 +234,7 @@
 
   // ===== 点击其他区域清除追加的 span 与状态 =====
   document.addEventListener('pointerdown', function (e) {
+    // 在 contextmenu 之前触发（右键卡片时先清后加），避免残留
     clearAppendedSpan()
     inputSelectedForCopy = false
   })
@@ -433,18 +333,23 @@
   }
 
   // ===== 右键反选全部内容（卡片 + 输入框） =====
+  // 方案：把输入框文本以隐藏 span 的形式追加到卡片末尾，
+  //       然后选中整个卡片（单个 range），这样 getSelection().toString()
+  //       返回「卡片文本 + 换行 + 输入框文本」，豆包插件可检测到。
   function onContextMenu(e) {
     e.preventDefault()
     var card = e.currentTarget
     card.style.userSelect = 'text'
     card.style.webkitUserSelect = 'text'
 
+    // 先清理上次追加的 span
     clearAppendedSpan()
 
     var inputBox = document.getElementById('input-box')
     var hasInput = inputBox && inputBox.textContent.trim()
 
     if (hasInput) {
+      // 追加隐藏 span，内容是换行 + 输入框文本
       var span = document.createElement('span')
       span.textContent = '\n' + inputBox.textContent
       span.style.position = 'absolute'
@@ -463,6 +368,7 @@
       inputSelectedForCopy = false
     }
 
+    // 选中整个卡片内容（单个 range，包含隐藏的输入框文本）
     var selection = window.getSelection()
     selection.removeAllRanges()
     var range = document.createRange()
@@ -505,6 +411,7 @@
 
     pendingRemoveIndex = index
 
+    // 右滑 → 准备添加到生词本
     if (direction === 1) {
       pendingWordbookAdd = Object.assign({}, wordList[index])
       pendingWordbookAdd.meanings = wordList[index].meanings.map(function (m) {
@@ -514,6 +421,7 @@
       pendingWordbookAdd = null
     }
 
+    // 测量卡片高度
     cardHeight = card.offsetHeight + CARD_GAP_PX
 
     card.classList.add('card-transition')
@@ -523,11 +431,6 @@
     wordList[index].offsetX = targetX
     wordList[index].zIndex = 10
     wordList[index].animClass = 'card-transition'
-
-    // 如果滑出的是选中的卡片，清除选中状态
-    if (selectedIndex === index) {
-      selectedIndex = -1
-    }
 
     setTimeout(function () {
       if (pendingRemoveIndex === index) {
@@ -583,20 +486,10 @@
 
     appendMainTip()
 
+    // 右滑的卡片添加到生词本
     if (pendingWordbookAdd) {
       addToWordbook(pendingWordbookAdd)
       pendingWordbookAdd = null
-    }
-
-    // 如果移除后还有卡片，选中下一张；如果没有卡片了，清除选中状态
-    if (wordList.length > 0) {
-      var newIndex = removedIndex
-      if (newIndex >= wordList.length) {
-        newIndex = wordList.length - 1
-      }
-      selectCard(newIndex)
-    } else {
-      clearSelected()
     }
   }
 
@@ -615,10 +508,12 @@
 
     wordbookList.push(wordCopy)
 
+    // 移除空提示
     if (wordbookEmpty) {
       wordbookEmpty.style.display = 'none'
     }
 
+    // 计算插入位置（跳过末尾的 .loading-tip）
     var insertBefore = null
     var children = wordbookContainer.children
     for (var i = 0; i < children.length; i++) {
@@ -628,6 +523,7 @@
       }
     }
 
+    // 创建卡片并插入到底部（在 loading-tip 之前，若存在）
     var newIndex = wordbookList.length - 1
     var cardEl = createCardElement(wordCopy, newIndex, 'wordbook')
     if (insertBefore) {
@@ -636,8 +532,10 @@
       wordbookContainer.appendChild(cardEl)
     }
 
+    // 动画结束后移除入场类 + 平滑滚动到底部
     setTimeout(function () {
       cardEl.classList.remove('wordbook-enter')
+      // 平滑滚动到底部
       wordbookContainer.scrollTo({
         top: wordbookContainer.scrollHeight,
         behavior: 'smooth'
@@ -662,3 +560,248 @@
     init()
   }
 })()
+
+
+
+
+============================================================
+【文件路径】C:/Users/TMPlo/Desktop/code-repo/word-left-right/index.html
+============================================================
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>单词卡片</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="layout">
+    <div class="column">
+      <div class="container" id="container">
+        <div class="loading-tip" id="initial-loading">加载中...</div>
+      </div>
+    </div>
+    <div class="column column-right">
+      <div class="wordbook-wrap">
+        <div class="container" id="wordbook">
+          <div class="loading-tip" id="wordbook-empty">右滑卡片添加到生词本</div>
+        </div>
+      </div>
+      <div class="input-panel">
+        <div class="input-box" id="input-box" contenteditable="true" data-placeholder="输入文本，右键卡片可同时选中此处内容"></div>
+      </div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
+
+
+
+
+============================================================
+【文件路径】C:/Users/TMPlo/Desktop/code-repo/word-left-right/README.md
+============================================================
+# word-left-right
+
+
+
+============================================================
+【文件路径】C:/Users/TMPlo/Desktop/code-repo/word-left-right/style.css
+============================================================
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  background-color: #f5f5f5;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow: hidden;
+}
+
+.layout {
+  display: flex;
+  justify-content: center;
+  height: 100vh;
+  width: 100%;
+}
+
+.column {
+  flex: 1;
+  max-width: 400px;
+  min-width: 0;
+  height: 100vh;
+}
+
+/* 右列：上下分栏（生词本 + 输入框），两个独立模块 */
+.column-right {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wordbook-wrap {
+  flex: 1;
+  min-height: 0;
+}
+
+.wordbook-wrap .container {
+  height: 100%;
+}
+
+.input-panel {
+  flex-shrink: 0;
+  padding: 0 16px 16px;
+}
+
+.input-box {
+  width: 100%;
+  height: 150px;
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #333;
+  overflow-y: auto;
+  outline: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  user-select: text;
+  -webkit-user-select: text;
+  word-break: break-word;
+}
+
+.input-box:empty::before {
+  content: attr(data-placeholder);
+  color: #999;
+  pointer-events: none;
+}
+
+.container {
+  height: 100vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
+  padding: 16px;
+  background-color: #f5f5f5;
+}
+
+.container.no-scroll {
+  overflow: hidden;
+}
+
+/* 左列：滚动条置于左侧，且始终可见（含互动期间） */
+#container {
+  direction: rtl;
+  overflow-y: scroll;
+}
+
+#container > * {
+  direction: ltr;
+}
+
+.word-card {
+  position: relative;
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  overflow: visible;
+  will-change: transform;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y;
+}
+
+.word-card.card-transition {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.word-card.card-fill-up {
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.word-card.wordbook-enter {
+  animation: wordbookSlideIn 0.3s ease-out;
+}
+
+@keyframes wordbookSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.word-header {
+  margin-bottom: 12px;
+}
+
+.word-text {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a1a;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.word-phonetic {
+  display: inline-block;
+}
+
+.phonetic-text {
+  font-size: 14px;
+  color: #666;
+}
+
+.word-meaning {
+  border-top: 1px solid #f0f0f0;
+  padding-top: 12px;
+}
+
+.meaning-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.meaning-item:last-child {
+  margin-bottom: 0;
+}
+
+.pos-tag {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: #0052d9;
+  background-color: #e8f0fe;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-right: 8px;
+  line-height: 1.4;
+}
+
+.meaning-text {
+  flex: 1;
+  font-size: 15px;
+  color: #333;
+  line-height: 1.6;
+}
+
+.loading-tip {
+  text-align: center;
+  padding: 16px;
+  color: #999;
+  font-size: 13px;
+}
+
+
+
