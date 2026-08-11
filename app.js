@@ -247,14 +247,21 @@
     if (!wordInput) return
 
     wordInput.addEventListener('keydown', function(e) {
+      // 阻止空格和Enter的默认行为
       if (e.key === ' ') {
-        // 空格键：判断输入是否正确
         e.preventDefault()
         checkWordInput()
       } else if (e.key === 'Enter') {
-        // Enter键：不判断，直接切换到下一个单词
         e.preventDefault()
         skipToNextWord()
+      }
+      // 方向键不在这里处理，由全局键盘事件处理
+      // 但需要阻止方向键在输入框中移动光标
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault()
+        // 让全局键盘事件处理这些按键
+        // 但我们需要在这里把事件传递出去
+        // 实际上，全局事件监听器会捕获这些事件
       }
     })
   }
@@ -324,21 +331,12 @@
 
   // ===== 键盘事件 =====
   document.addEventListener('keydown', function(e) {
-    // 如果输入框获得焦点，不处理方向键（让输入框自己处理）
     var activeEl = document.activeElement
-    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.getAttribute('contenteditable') === 'true')) {
-      // 单词输入框只处理空格和Enter，其他键让输入框处理
-      if (e.key === ' ' || e.key === 'Enter') {
-        // 这些键已经在 wordInput 的 keydown 事件中处理了
-        return
-      }
-      // 方向键在输入框中不触发卡片切换
-      if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-        return
-      }
-      return
-    }
 
+    // 判断是否在输入框中
+    var isInInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.getAttribute('contenteditable') === 'true')
+
+    // 方向键处理 - 无论在不在输入框都处理
     if (e.key === 'ArrowDown') {
       e.preventDefault()
       if (wordList.length === 0) return
@@ -353,7 +351,10 @@
       }
       selectCard(nextIndex)
       wordInput.focus()
-    } else if (e.key === 'ArrowUp') {
+      return
+    }
+
+    if (e.key === 'ArrowUp') {
       e.preventDefault()
       if (wordList.length === 0) return
       var prevIndex = selectedIndex - 1
@@ -362,7 +363,10 @@
       }
       selectCard(prevIndex)
       wordInput.focus()
-    } else if (e.key === 'ArrowRight') {
+      return
+    }
+
+    if (e.key === 'ArrowRight') {
       e.preventDefault()
       if (selectedIndex >= 0 && selectedIndex < wordList.length) {
         var cards = mainContainer.querySelectorAll('.word-card')
@@ -372,7 +376,20 @@
         }
       }
       wordInput.focus()
+      return
     }
+
+    // 如果在输入框中，空格和Enter已经由输入框的keydown处理了
+    if (isInInput) {
+      // 如果当前在输入框中，且按的是空格或Enter，已经由输入框事件处理
+      if (e.key === ' ' || e.key === 'Enter') {
+        return
+      }
+      // 其他键让输入框正常处理
+      return
+    }
+
+    // 不在输入框中时的其他按键处理（如果需要）
   })
 
   // ===== 分页加载 =====
