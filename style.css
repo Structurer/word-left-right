@@ -36,9 +36,8 @@ html, body {
 .input-area {
   flex-shrink: 0;
   height: 80px;
-  padding: 16px 16px 8px 16px;  /* 与卡片容器的 padding 一致 */
+  padding: 16px 16px 8px 16px;
   background-color: #f5f5f5;
-  border-bottom: 1px solid #e8e8e8;
   display: flex;
   align-items: center;
 }
@@ -92,7 +91,7 @@ html, body {
 
 .input-panel {
   flex-shrink: 0;
-  padding: 0 16px 16px;  /* 与卡片容器的 padding 一致 */
+  padding: 0 16px 16px;
 }
 
 .input-box {
@@ -100,7 +99,7 @@ html, body {
   height: 384px;
   background-color: #fff;
   border-radius: 12px;
-  padding: 20px;  /* 与卡片的 padding 一致 */
+  padding: 20px;
   font-size: 15px;
   line-height: 1.6;
   color: #333;
@@ -123,7 +122,7 @@ html, body {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overflow-x: hidden;
-  padding: 0px 16px;  /* 左右各 16px，与卡片对齐 */
+  padding: 0px 16px;
   background-color: #f5f5f5;
 }
 
@@ -131,14 +130,30 @@ html, body {
   overflow: hidden;
 }
 
-/* 左列：滚动条置于左侧，且始终可见（含互动期间） */
+/* ===== 左列：隐藏滚动条（兼容所有浏览器） ===== */
 #container {
   direction: rtl;
   overflow-y: scroll;
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE/Edge */
+}
+
+#container::-webkit-scrollbar {
+  display: none;                /* Chrome/Safari/Opera */
 }
 
 #container > * {
   direction: ltr;
+}
+
+/* ===== 右列生词本：隐藏滚动条（兼容所有浏览器） ===== */
+#wordbook {
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE/Edge */
+}
+
+#wordbook::-webkit-scrollbar {
+  display: none;                /* Chrome/Safari/Opera */
 }
 
 .word-card {
