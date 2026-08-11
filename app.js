@@ -525,9 +525,14 @@
       wordbookContainer.appendChild(cardEl)
     }
 
-    // 动画结束后移除入场类
+    // 动画结束后移除入场类 + 平滑滚动到底部
     setTimeout(function () {
       cardEl.classList.remove('wordbook-enter')
+      // 平滑滚动到底部
+      wordbookContainer.scrollTo({
+        top: wordbookContainer.scrollHeight,
+        behavior: 'smooth'
+      });
     }, 300)
   }
 
