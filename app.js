@@ -427,14 +427,14 @@
     }
   })
 
-  // ===== 输入框：仅粘贴纯文本 + 本地缓存 =====
+  // ===== 输入框：仅粘贴纯文本 + 本地缓存（保留回车换行） =====
   var inputBox = document.getElementById('input-box')
   var INPUT_STORAGE_KEY = 'word-input-box-content'
   if (inputBox) {
-    // 恢复上次内容
+    // 恢复上次内容：innerText 写入 + white-space:pre-wrap 可正确展示换行符
     try {
       var saved = localStorage.getItem(INPUT_STORAGE_KEY)
-      if (saved) inputBox.textContent = saved
+      if (saved) inputBox.innerText = saved
     } catch (err) {}
 
     inputBox.addEventListener('paste', function (e) {
@@ -443,12 +443,12 @@
       document.execCommand('insertText', false, text)
     })
 
-    // 输入时自动保存（防抖）
+    // 输入时自动保存（防抖）：保存 innerText 可正确提取 DOM 中由 Enter 产生的 <br>/<div> 换行符为 \n
     var saveTimer = null
     inputBox.addEventListener('input', function () {
       if (saveTimer) clearTimeout(saveTimer)
       saveTimer = setTimeout(function () {
-        try { localStorage.setItem(INPUT_STORAGE_KEY, inputBox.textContent) } catch (err) {}
+        try { localStorage.setItem(INPUT_STORAGE_KEY, inputBox.innerText) } catch (err) {}
       }, 300)
     })
   }
@@ -563,11 +563,11 @@
     clearAppendedSpan()
 
     var inputBox = document.getElementById('input-box')
-    var hasInput = inputBox && inputBox.textContent.trim()
+    var hasInput = inputBox && inputBox.innerText.trim()
 
     if (hasInput) {
       var span = document.createElement('span')
-      span.textContent = '\n' + inputBox.textContent
+      span.textContent = '\n' + inputBox.innerText
       span.style.position = 'absolute'
       span.style.left = '-9999px'
       span.style.top = '0'
