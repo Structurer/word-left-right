@@ -95,37 +95,53 @@
       })
   }
 
-  // ===== 初始化生词本占位卡片（放在最顶部） =====
-  function initWordbookPlaceholder() {
-    // 隐藏原来的空状态提示
-    if (wordbookEmpty) {
-      wordbookEmpty.style.display = 'none'
-    }
-
-    // 创建占位卡片
-    var card = document.createElement('div')
-    card.className = 'wordbook-empty-card'
-    card.dataset.role = 'wordbook-placeholder'
-
-    var text = document.createElement('div')
-    text.className = 'empty-text'
-    text.textContent = '右滑卡片添加到生词本'
-    card.appendChild(text)
-
-    // 插入到生词本容器的最顶部（第一个子元素）
-    var firstChild = wordbookContainer.firstChild
-    if (firstChild) {
-      wordbookContainer.insertBefore(card, firstChild)
-    } else {
-      wordbookContainer.appendChild(card)
-    }
-
-    // 保存引用
-    emptyPlaceholderCard = card
-
-    // 确保滚动条在顶部
-    wordbookContainer.scrollTop = 0
+  // ===== 初始化生词本占位卡片（放在最顶部）- 改为功能介绍 =====
+function initWordbookPlaceholder() {
+  // 隐藏原来的空状态提示
+  if (wordbookEmpty) {
+    wordbookEmpty.style.display = 'none'
   }
+
+  // 创建占位卡片
+  var card = document.createElement('div')
+  card.className = 'wordbook-empty-card'
+  card.dataset.role = 'wordbook-placeholder'
+
+  // 标题
+  var title = document.createElement('div')
+  title.className = 'empty-title'
+  title.textContent = '生词本'
+  card.appendChild(title)
+
+  // 分割线
+  var divider = document.createElement('div')
+  divider.className = 'empty-divider'
+  card.appendChild(divider)
+
+  // 功能介绍
+  var desc = document.createElement('div')
+  desc.className = 'empty-desc'
+  desc.innerHTML = [
+    '切换：<kbd>↑</kbd> <kbd>↓</kbd> 选词，<kbd>→</kbd> 加入生词本',
+    '生词：右滑卡片自动存入，右键卡片联动豆包',
+    '拼写：输入单词后按下 <kbd>空格</kbd> 校验，<kbd>Enter</kbd> 跳过'
+  ].join('<br>')
+  card.appendChild(desc)
+
+  // 插入到生词本容器的最顶部（第一个子元素）
+  var firstChild = wordbookContainer.firstChild
+  if (firstChild) {
+    wordbookContainer.insertBefore(card, firstChild)
+  } else {
+    wordbookContainer.appendChild(card)
+  }
+
+  // 保存引用
+  emptyPlaceholderCard = card
+
+  // 确保滚动条在顶部
+  wordbookContainer.scrollTop = 0
+}
 
   // ===== 渲染 =====
   function renderAll() {

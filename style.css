@@ -264,12 +264,12 @@ html, body {
   75% { transform: translateX(6px); }
 }
 
-/* ===== 生词本顶部占位卡片 - 始终保留在顶部，高度减去顶部间距 ===== */
+/* ===== 生词本顶部占位卡片 - 功能介绍 ===== */
 .wordbook-empty-card {
   height: calc(100% - 16px);
   background-color: #fff;
   border-radius: 12px;
-  padding: 20px;
+  padding: 24px 20px;
   margin-top: 16px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
   border: 3px solid transparent;
@@ -277,13 +277,44 @@ html, body {
   user-select: none;
   -webkit-user-select: none;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  overflow-y: auto;
 }
 
-.wordbook-empty-card .empty-text {
-  font-size: 16px;
-  color: #999;
+.wordbook-empty-card .empty-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 10px;
+}
+
+.wordbook-empty-card .empty-divider {
+  width: 40px;
+  height: 2px;
+  background: #e0e0e0;
+  margin: 0 0 12px 0;
+  border-radius: 1px;
+  flex-shrink: 0;
+}
+
+.wordbook-empty-card .empty-desc {
+  font-size: 14px;
+  color: #555;
   text-align: center;
-  line-height: 1.6;
+  line-height: 2;
+}
+
+.wordbook-empty-card .empty-desc kbd {
+  display: inline-block;
+  background: #f0f0f0;
+  padding: 0 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: inherit;
+  border: 1px solid #ddd;
+  color: #333;
+  min-width: 20px;
+  text-align: center;
 }
