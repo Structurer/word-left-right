@@ -491,6 +491,11 @@ function initWordbookPlaceholder() {
       if (saved) inputBox.innerText = saved
     } catch (err) {}
 
+    // 确保初始为空时 placeholder 正常显示（清理可能残留的 <br>）
+    if (inputBox.innerText.trim() === '') {
+      inputBox.innerHTML = ''
+    }
+
     inputBox.addEventListener('paste', function (e) {
       e.preventDefault()
       var text = (e.clipboardData || window.clipboardData).getData('text/plain')
@@ -500,9 +505,20 @@ function initWordbookPlaceholder() {
     // 输入时自动保存（防抖）：保存 innerText 可正确提取 DOM 中由 Enter 产生的 <br>/<div> 换行符为 \n
     var saveTimer = null
     inputBox.addEventListener('input', function () {
+      // 内容为空时清理残留 <br>，让 CSS :empty 生效，placeholder 正常显示
+      if (inputBox.innerText.trim() === '') {
+        inputBox.innerHTML = ''
+      }
       if (saveTimer) clearTimeout(saveTimer)
       saveTimer = setTimeout(function () {
-        try { localStorage.setItem(INPUT_STORAGE_KEY, inputBox.innerText) } catch (err) {}
+        try {
+          var content = inputBox.innerText
+          if (content.trim() === '') {
+            localStorage.removeItem(INPUT_STORAGE_KEY)
+          } else {
+            localStorage.setItem(INPUT_STORAGE_KEY, content)
+          }
+        } catch (err) {}
       }, 300)
     })
   }
