@@ -40,6 +40,9 @@
   // 音频
   var audioCtx = null
 
+  // 生词本占位卡片（始终保留在顶部）
+  var emptyPlaceholderCard = null
+
   // ===== 初始化 =====
   function init() {
     fetch('vocab-data.json')
@@ -83,10 +86,45 @@
 
         // 输入框获得焦点
         wordInput.focus()
+
+        // 初始化生词本占位卡片（放在顶部）
+        initWordbookPlaceholder()
       })
       .catch(function (err) {
         initialLoading.textContent = '数据加载失败: ' + err.message
       })
+  }
+
+  // ===== 初始化生词本占位卡片（放在最顶部） =====
+  function initWordbookPlaceholder() {
+    // 隐藏原来的空状态提示
+    if (wordbookEmpty) {
+      wordbookEmpty.style.display = 'none'
+    }
+
+    // 创建占位卡片
+    var card = document.createElement('div')
+    card.className = 'wordbook-empty-card'
+    card.dataset.role = 'wordbook-placeholder'
+
+    var text = document.createElement('div')
+    text.className = 'empty-text'
+    text.textContent = '右滑卡片添加到生词本'
+    card.appendChild(text)
+
+    // 插入到生词本容器的最顶部（第一个子元素）
+    var firstChild = wordbookContainer.firstChild
+    if (firstChild) {
+      wordbookContainer.insertBefore(card, firstChild)
+    } else {
+      wordbookContainer.appendChild(card)
+    }
+
+    // 保存引用
+    emptyPlaceholderCard = card
+
+    // 确保滚动条在顶部
+    wordbookContainer.scrollTop = 0
   }
 
   // ===== 渲染 =====
@@ -730,7 +768,7 @@
     wordInput.focus()
   }
 
-  // ===== 添加到生词本（从底部插入） =====
+  // ===== 添加到生词本（直接追加到底部，占位卡片始终保留在顶部） =====
   function addToWordbook(word) {
     var wordCopy = {
       word: word.word,
@@ -745,29 +783,14 @@
 
     wordbookList.push(wordCopy)
 
-    if (wordbookEmpty) {
-      wordbookEmpty.style.display = 'none'
-    }
+    var cardEl = createCardElement(wordCopy, wordbookList.length - 1, 'wordbook')
 
-    var insertBefore = null
-    var children = wordbookContainer.children
-    for (var i = 0; i < children.length; i++) {
-      if (children[i].classList.contains('loading-tip')) {
-        insertBefore = children[i]
-        break
-      }
-    }
-
-    var newIndex = wordbookList.length - 1
-    var cardEl = createCardElement(wordCopy, newIndex, 'wordbook')
-    if (insertBefore) {
-      wordbookContainer.insertBefore(cardEl, insertBefore)
-    } else {
-      wordbookContainer.appendChild(cardEl)
-    }
+    // 直接追加到底部
+    wordbookContainer.appendChild(cardEl)
 
     setTimeout(function () {
       cardEl.classList.remove('wordbook-enter')
+      // 滚动到底部
       wordbookContainer.scrollTo({
         top: wordbookContainer.scrollHeight,
         behavior: 'smooth'

@@ -188,20 +188,7 @@ html, body {
   transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.word-card.wordbook-enter {
-  animation: wordbookSlideIn 0.3s ease-out;
-}
-
-@keyframes wordbookSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+/* ===== wordbook-enter 动画已删除，卡片自然出现 ===== */
 
 .word-header {
   margin-bottom: 12px;
@@ -275,4 +262,28 @@ html, body {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-6px); }
   75% { transform: translateX(6px); }
+}
+
+/* ===== 生词本顶部占位卡片 - 始终保留在顶部，高度减去顶部间距 ===== */
+.wordbook-empty-card {
+  height: calc(100% - 16px);
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  border: 3px solid transparent;
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wordbook-empty-card .empty-text {
+  font-size: 16px;
+  color: #999;
+  text-align: center;
+  line-height: 1.6;
 }
