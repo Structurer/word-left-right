@@ -42,6 +42,8 @@
 
   // Cloudflare Worker API 地址（由 config.json 加载）
   var apiBase = ''
+  // 项目 B word-review 跳转地址（由 config.json 加载）
+  var reviewUrl = ''
 
   // 生词本占位卡片（始终保留在顶部）
   var emptyPlaceholderCard = null
@@ -51,9 +53,10 @@
     // 先加载 config.json 获取 apiBase，再加载词表
     fetch('config.json')
       .then(function (res) { return res.json() })
-      .catch(function () { return { apiBase: '' } })  // config.json 缺失时降级
+      .catch(function () { return { apiBase: '', reviewUrl: '' } })  // config.json 缺失时降级
       .then(function (config) {
         apiBase = (config && config.apiBase) || ''
+        reviewUrl = (config && config.reviewUrl) || ''
         return fetch('vocab-data.json')
       })
       .then(function (res) { return res.json() })
@@ -132,10 +135,13 @@ function initWordbookPlaceholder() {
     wordbookEmpty.style.display = 'none'
   }
 
-  // 创建占位卡片
-  var card = document.createElement('div')
+  // 创建占位卡片（点击跳转到项目 B word-review）
+  var card = document.createElement('a')
   card.className = 'wordbook-empty-card'
   card.dataset.role = 'wordbook-placeholder'
+  card.href = reviewUrl || 'https://word-review-bxk.pages.dev'
+  card.target = '_blank'
+  card.rel = 'noopener noreferrer'
 
   // 标题
   var title = document.createElement('div')

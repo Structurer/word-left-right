@@ -294,6 +294,21 @@ html, body {
   align-items: center;
   justify-content: center;
   overflow-y: auto;
+  /* a 标签默认样式覆盖，确保无视觉变化 */
+  text-decoration: none;
+  color: inherit;
+}
+
+/* 禁用点击/访问态的视觉反馈 */
+.wordbook-empty-card:active,
+.wordbook-empty-card:hover,
+.wordbook-empty-card:visited,
+.wordbook-empty-card:focus {
+  background-color: #fff;
+  color: inherit;
+  border-color: transparent;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  outline: none;
 }
 
 .wordbook-empty-card .empty-title {
