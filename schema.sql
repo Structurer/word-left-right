@@ -10,4 +10,5 @@ CREATE TABLE IF NOT EXISTS words (
   created_at INTEGER NOT NULL DEFAULT (unixepoch())
 );
 
-CREATE INDEX IF NOT EXISTS idx_words_word ON words(word);
+-- 删除下面这一行，重复索引，不需要！
+-- CREATE INDEX IF NOT EXISTS idx_words_word ON words(word);
