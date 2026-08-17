@@ -1,0 +1,20 @@
+# Cloudflare Pages 项目配置 — word-review（项目 B）
+#
+# 复用项目 A 的 D1 数据库 word-db（uuid: ee99843f-b251-4a09-a93d-ea547383170a）
+# 但 Functions 只暴露 GET / DELETE，从代码层杜绝新增/更新写入。
+#
+# 部署步骤：
+# 1. cd word-review
+# 2. 设置 token：Invoke-Expression $(Get-Content ../.env -Raw)
+# 3. 创建 Pages 项目：wrangler pages project create word-review
+# 4. 部署：wrangler pages deploy . --project-name=word-review
+# 5. 访问 https://word-review.pages.dev
+
+name = "word-review"
+pages_build_output_dir = "."
+compatibility_date = "2024-09-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "word-db"
+database_id = "ee99843f-b251-4a09-a93d-ea547383170a"
