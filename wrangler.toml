@@ -1,0 +1,21 @@
+# Cloudflare Pages 项目配置
+#
+# 部署步骤：
+# 1. 安装 wrangler：npm install -g wrangler
+# 2. 登录：wrangler login
+# 3. 创建 D1 数据库：wrangler d1 create word-db
+#    → 把返回的 database_id 填到下方 database_id
+# 4. 建表：wrangler d1 execute word-db --remote --file=./schema.sql
+# 5. 创建 Pages 项目：wrangler pages project create word-left-right
+# 6. 部署：wrangler pages deploy . --project-name=word-left-right
+# 7. 把 Pages 域名填到 config.json 的 apiBase 字段
+#    例如：https://word-left-right.pages.dev
+
+name = "word-left-right"
+pages_build_output_dir = "."
+compatibility_date = "2024-09-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "word-db"
+database_id = "ee99843f-b251-4a09-a93d-ea547383170a"

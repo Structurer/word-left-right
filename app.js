@@ -40,12 +40,22 @@
   // 音频
   var audioCtx = null
 
+  // Cloudflare Worker API 地址（由 config.json 加载）
+  var apiBase = ''
+
   // 生词本占位卡片（始终保留在顶部）
   var emptyPlaceholderCard = null
 
   // ===== 初始化 =====
   function init() {
-    fetch('vocab-data.json')
+    // 先加载 config.json 获取 apiBase，再加载词表
+    fetch('config.json')
+      .then(function (res) { return res.json() })
+      .catch(function () { return { apiBase: '' } })  // config.json 缺失时降级
+      .then(function (config) {
+        apiBase = (config && config.apiBase) || ''
+        return fetch('vocab-data.json')
+      })
       .then(function (res) { return res.json() })
       .then(function (vocabData) {
         allWords = vocabData.map(function (item) {
@@ -93,6 +103,26 @@
       .catch(function (err) {
         initialLoading.textContent = '数据加载失败: ' + err.message
       })
+  }
+
+  // ===== 上传单词到 Cloudflare D1 =====
+  async function uploadWord(word) {
+    if (!apiBase) return { success: false, error: 'no apiBase' }
+    try {
+      var res = await fetch(apiBase.replace(/\/$/, '') + '/api/words', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          word: word.word,
+          phonetic: word.phonetic,
+          meanings: word.meanings
+        })
+      })
+      return await res.json()
+    } catch (err) {
+      console.error('Upload word failed:', err)
+      return { success: false, error: err.message }
+    }
   }
 
   // ===== 初始化生词本占位卡片（放在最顶部）- 改为功能介绍 =====
@@ -828,6 +858,13 @@ function initWordbookPlaceholder() {
         behavior: 'smooth'
       });
     }, 300)
+
+    // 异步上传到 Cloudflare D1，成功后给卡片右上角加蓝点标记
+    uploadWord(wordCopy).then(function (result) {
+      if (result && result.success) {
+        cardEl.classList.add('uploaded')
+      }
+    })
   }
 
   // ===== 音频播放 =====

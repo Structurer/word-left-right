@@ -180,6 +180,19 @@ html, body {
   box-shadow: 0 0 0 3px rgba(0, 82, 217, 0.15), 0 4px 12px rgba(0, 82, 217, 0.2);
 }
 
+/* 已上传到 D1 标记：右上角蓝点 */
+.word-card.uploaded::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  background-color: #0052d9;
+  border-radius: 50%;
+  z-index: 1;
+}
+
 .word-card.card-transition {
   transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
