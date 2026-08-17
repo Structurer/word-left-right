@@ -96,14 +96,22 @@ html, body {
 }
 
 .word-meaning-item {
-  display: inline-block;
-  margin-right: 14px;
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 6px;
 }
 
 .word-pos {
   color: #0052d9;
   font-weight: 500;
-  margin-right: 4px;
+  flex-shrink: 0;           /* 不压缩，保持词性原文宽度 */
+  white-space: nowrap;
+  margin-right: 8px;        /* 词性和释义之间固定间距 */
+}
+
+.word-meaning-text {
+  flex: 1;
+  min-width: 0;             /* 允许 flex item 内部正常换行 */
 }
 
 .word-actions {

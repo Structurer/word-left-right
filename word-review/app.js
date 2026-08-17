@@ -95,7 +95,7 @@
     var meaningsHtml = meanings.map(function (m) {
       return '<span class="word-meaning-item">' +
         '<span class="word-pos">' + escapeHtml(m.pos) + '</span>' +
-        escapeHtml(m.meaning) +
+        '<span class="word-meaning-text">' + escapeHtml(m.meaning) + '</span>' +
       '</span>'
     }).join('')
 
